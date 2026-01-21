@@ -1,106 +1,47 @@
 package portfolio.backend.service;
 
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import portfolio.backend.dto.ContactRequest;
 
-import java.io.File;
-import java.io.FileOutputStream;
+import java.util.*;
 
 @Service
 public class ContactService {
 
-    private final JavaMailSender mailSender;
+    @Value("${brevo.api.key}")
+    private String apiKey;
 
-    public ContactService(JavaMailSender mailSender) {
-        this.mailSender = mailSender;
-    }
+    @Value("${brevo.url}")
+    private String apiUrl;
 
+    private final RestTemplate restTemplate = new RestTemplate();
 
     public void handleContact(ContactRequest request) {
-        try {
-            //saveToExcel(request);
-            sendEmail(request);
-        } catch (Exception e) {
-            // This will print the EXACT error to your Render logs
-            System.err.println("ERROR SENDING MAIL: " + e.getMessage());
-            e.printStackTrace();
-            throw e;
-        }
+        sendEmailViaApi(request);
     }
 
+    private void sendEmailViaApi(ContactRequest request) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("api-key", apiKey);
 
+        // Prepare the JSON body for Brevo
+        Map<String, Object> body = new HashMap<>();
+        body.put("sender", Map.of("name", "Portfolio Visitor", "email", "panishita21@gmail.com"));
+        body.put("to", List.of(Map.of("email", "panishita21@gmail.com")));
+        body.put("subject", "New Portfolio Message from " + request.getName());
+        body.put("textContent", "Sender Email: " + request.getEmail() + "\n\nMessage:\n" + request.getMessage());
 
-    private synchronized void saveToExcel(ContactRequest request) {
-
-        File file = new File(System.getProperty("user.home"), "contacts.xlsx");
-        File tempFile = new File(System.getProperty("user.home"), "contacts_tmp.xlsx");
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
 
         try {
-            Workbook workbook;
-
-            if (file.exists() && file.length() > 0) {
-                workbook = WorkbookFactory.create(file);
-            } else {
-                workbook = new XSSFWorkbook();
-            }
-
-            Sheet sheet = workbook.getSheet("Contacts");
-            if (sheet == null) {
-                sheet = workbook.createSheet("Contacts");
-                Row header = sheet.createRow(0);
-                header.createCell(0).setCellValue("Name");
-                header.createCell(1).setCellValue("Email");
-                header.createCell(2).setCellValue("Message");
-            }
-
-            int rowIndex = sheet.getLastRowNum() + 1;
-            Row row = sheet.createRow(rowIndex);
-            row.createCell(0).setCellValue(request.getName());
-            row.createCell(1).setCellValue(request.getEmail());
-            row.createCell(2).setCellValue(request.getMessage());
-
-            // 🔑 WRITE TO TEMP FILE FIRST
-            try (FileOutputStream fos = new FileOutputStream(tempFile)) {
-                workbook.write(fos);
-                fos.flush();
-            }
-
-            workbook.close();
-
-            // 🔑 ATOMIC REPLACE
-            if (file.exists()) {
-                file.delete();
-            }
-            tempFile.renameTo(file);
-
+            restTemplate.postForEntity(apiUrl, entity, String.class);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Failed to save contact to Excel", e);
+            throw new RuntimeException("Email delivery failed via API");
         }
     }
-    private void sendEmail(ContactRequest request) {
-        SimpleMailMessage mail = new SimpleMailMessage();
-
-        mail.setTo("panishita21@gmail.com");
-        mail.setFrom("panishita21@gmail.com"); // REQUIRED
-        //mail.setReplyTo(request.getEmail());   // OPTIONAL but good
-
-        mail.setSubject("New Contact Message From Your Site");
-
-        mail.setText(
-                "Name: " + request.getName() + "\n" +
-                        "Email: " + request.getEmail() + "\n\n" +
-                        request.getMessage()
-        );
-
-        mailSender.send(mail);
-    }
-
 }
