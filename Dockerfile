@@ -12,4 +12,5 @@ WORKDIR /app
 COPY --from=build /build/target/porfolio-backend-0.0.1-SNAPSHOT.jar app.jar
 
 # Render needs to see the app listening on $PORT
-ENTRYPOINT ["java", "-Xmx512m", "-Dserver.port=${PORT:8080}", "-jar", "app.jar"]
+
+ENTRYPOINT ["java", "-Djava.net.preferIPv4Stack=true", "-jar", "app.jar"]
