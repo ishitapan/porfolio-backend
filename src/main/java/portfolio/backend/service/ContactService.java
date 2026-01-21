@@ -17,7 +17,13 @@ public class ContactService {
     @Value("${brevo.url}")
     private String apiUrl;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+
+    private final RestTemplate restTemplate;
+
+    // Spring will now automatically find the @Bean you created and put it here
+    public ContactService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
     public void handleContact(ContactRequest request) {
         sendEmailViaApi(request);

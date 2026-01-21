@@ -2,6 +2,8 @@ package portfolio.backend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
 public class PorfolioBackendApplication {
@@ -10,4 +12,8 @@ public class PorfolioBackendApplication {
 		SpringApplication.run(PorfolioBackendApplication.class, args);
 	}
 
+	@Bean
+	public RestTemplate restTemplate() {
+		return new RestTemplate();
+	}
 }
