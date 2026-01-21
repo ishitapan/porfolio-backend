@@ -25,17 +25,15 @@ public class ContactService {
     public void handleContact(ContactRequest request) {
         try {
             //saveToExcel(request);
-            //sendEmail(request);
-            oupt();
+            sendEmail(request);
+
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Contact processing failed");
         }
     }
 
-    private String oupt() {
-        return "I am here";
-    }
+
 
     private synchronized void saveToExcel(ContactRequest request) {
 

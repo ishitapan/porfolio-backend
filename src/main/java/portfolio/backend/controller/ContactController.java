@@ -21,4 +21,10 @@ public class ContactController {
         contactService.handleContact(request);
         return ResponseEntity.ok("Message sent successfully");
     }
+    @GetMapping
+    public String hello() {
+
+        return "Hello world";
+    }
+
 }

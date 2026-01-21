@@ -6,8 +6,10 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # ---------- RUNTIME STAGE ----------
-FROM eclipse-temurin:17-jdk-alpine
+# Use alpine for smaller size, but ensure it has the necessary libraries
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=build /build/target/porfolio-backend-0.0.1-SNAPSHOT.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+
+# Render needs to see the app listening on $PORT
+ENTRYPOINT ["java", "-Xmx512m", "-Dserver.port=${PORT:8080}", "-jar", "app.jar"]
