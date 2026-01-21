@@ -5,6 +5,9 @@ public class ContactRequest {
     private String email;
     private String message;
 
+    public ContactRequest() {
+    }
+
     public String getName() {
         return name;
     }

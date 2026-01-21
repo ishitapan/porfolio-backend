@@ -22,14 +22,16 @@ public class ContactService {
         this.mailSender = mailSender;
     }
 
+
     public void handleContact(ContactRequest request) {
         try {
             //saveToExcel(request);
             sendEmail(request);
-
         } catch (Exception e) {
+            // This will print the EXACT error to your Render logs
+            System.err.println("ERROR SENDING MAIL: " + e.getMessage());
             e.printStackTrace();
-            throw new RuntimeException("Contact processing failed");
+            throw e;
         }
     }
 
